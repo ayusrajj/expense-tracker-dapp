@@ -148,5 +148,5 @@ export default ProfileSection;Frontend (React + Tailwind CSS)
 ```
 ## 📸 Screenshot
 
-![App Screenshot](./screenshot.png)
+![App Screenshot](.src/img/Screenshot.png)
 ## Made by Ayush Raj
