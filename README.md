@@ -1,70 +1,152 @@
-# Getting Started with Create React App
+# On-Chain Expense Tracker dApp – Feature Enhancements
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+This project includes two new core features added to the decentralized expense tracker dApp:
 
-## Available Scripts
+---
 
-In the project directory, you can run:
+## ✅ Features Added
 
-### `npm start`
+### 1. 📊 Display Number of Registered Users
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+Displays the total number of users registered on the blockchain via the smart contract.
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+#### Frontend (React)
 
-### `npm test`
+**State and Fetch Logic:**
+```js
+const [totalUsers, setTotalUsers] = useState(0);
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+useEffect(() => {
+  const fetchTotalUsers = async () => {
+    if (contract) {
+      const users = await contract.methods.getTotalUsers().call();
+      setTotalUsers(users);
+    }
+  };
+  fetchTotalUsers();
+}, [contract]);
+```
+#### UI(CSS)
+```jsx
+<p className="text-sm text-gray-300">Total Users: {totalUsers}</p>
+```
+#### Solidity
+```sol
+mapping(address => bool) public isUserRegistered;
+address[] public userAddresses;
 
-### `npm run build`
+function registerUser() public {
+    require(!isUserRegistered[msg.sender], "Already registered");
+    isUserRegistered[msg.sender] = true;
+    userAddresses.push(msg.sender);
+}
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+function getTotalUsers() public view returns (uint) {
+    return userAddresses.length;
+}
+```
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+### 2.Update User Name
+Allows users to update their on-chain profile name.
+#### Frontend (React)
+```js
+const [newName, setNewName] = useState("");
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+const handleUpdateName = async () => {
+  if (contract && currentAccount) {
+    await contract.methods.updateMyName(newName).send({ from: currentAccount });
+    alert("Name updated!");
+  }
+};
+```
+#### UI(CSS)
+```jsx
+<input
+  type="text"
+  value={newName}
+  onChange={(e) => setNewName(e.target.value)}
+  placeholder="Enter new name"
+  className="input"
+/>
+<button onClick={handleUpdateName} className="btn">Update Name</button>
+```
+#### Solidity
+```sol
+mapping(address => string) public userNames;
 
-### `npm run eject`
+function updateMyName(string memory newName) public {
+    require(isUserRegistered[msg.sender], "User not registered");
+    userNames[msg.sender] = newName;
+}
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+function getMyName() public view returns (string memory) {
+    return userNames[msg.sender];
+}
+```
+### 3.Profile Section Feature
+#### Frontend (React + Tailwind CSS)
+```jsx
+import React, { useState } from "react";
+import { ConnectButton } from "@rainbow-me/rainbowkit";
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+const ProfileSection = ({ currentAccount, onLogout }) => {
+  const [isLoggedIn, setIsLoggedIn] = useState(!!currentAccount);
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
+  const handleLogin = () => {
+    setIsLoggedIn(true);
+  };
 
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
+  const handleLogout = () => {
+    setIsLoggedIn(false);
+    onLogout();
+  };
 
-## Learn More
+  return (
+    <div className="fixed top-4 left-4 bg-white bg-opacity-90 p-4 rounded-2xl shadow-xl w-60">
+      <div className="flex items-center space-x-4">
+        <img
+          src="/profile.jpg"
+          alt="User"
+          className="w-12 h-12 rounded-full border border-gray-300"
+        />
+        <div>
+          <p className="text-xs text-gray-600">Wallet:</p>
+          <p className="text-sm font-bold text-gray-900 break-words">
+            {currentAccount
+              ? `${currentAccount.substring(0, 6)}...${currentAccount.substring(currentAccount.length - 4)}`
+              : "Not Connected"}
+          </p>
+        </div>
+      </div>
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+      <div className="mt-4 space-y-2">
+        {!isLoggedIn ? (
+          <button
+            onClick={handleLogin}
+            className="w-full py-1 text-sm bg-green-500 text-white rounded-lg"
+          >
+            Login
+          </button>
+        ) : (
+          <button
+            onClick={handleLogout}
+            className="w-full py-1 text-sm bg-red-500 text-white rounded-lg"
+          >
+            Logout
+          </button>
+        )}
+      </div>
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+      <div className="mt-4">
+        <ConnectButton />
+      </div>
+    </div>
+  );
+};
 
-### Code Splitting
+export default ProfileSection;Frontend (React + Tailwind CSS)
+```
+## 📸 Screenshot
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
-
-### Analyzing the Bundle Size
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
-
-### Making a Progressive Web App
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
-
-### Advanced Configuration
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
-
-### Deployment
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
-
-### `npm run build` fails to minify
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+![App Screenshot](./screenshot.png)
+## Made by Ayush Raj
