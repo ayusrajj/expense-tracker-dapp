@@ -148,5 +148,5 @@ export default ProfileSection;Frontend (React + Tailwind CSS)
 ```
 ## 📸 Screenshot
 
-![App Screenshot](.src/img/Screenshot.png)
+![App Screenshot](https://github.com/ayusrajj/expense-tracker-dapp/blob/main/src/img/Screenshot.png)
 ## Made by Ayush Raj
